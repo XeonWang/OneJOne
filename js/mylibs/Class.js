@@ -41,7 +41,7 @@
 				return this.constructor.apply(this, arguments);
 			};
 			
-			newClass['constructor'] = function(){
+			newClass.constructor = function(){
 				return this;
 			}
 			
@@ -61,11 +61,13 @@
 		},
 		
 		getInstance : function(className, config){
-		
+			var cls = OneJOne.ClassManager.getClass(className);
+			return new cls(config);
 		}
 	};
 	
 	OneJOne.define = OneJOne.ClassManager.define;
+	OneJOne.create = OneJOne.ClassManager.getInstance;
 	
 	OneJOne.ClassManager.registerProcessor('extend', function(cls, classBody){
 		if(!OneJOne.typeAlert([{
@@ -75,13 +77,15 @@
 		var parent = classBody && classBody.extend;
 		if(parent && typeof parent == 'string'){
 			parent = OneJOne.ClassManager.getClass(parent);
+		}else{
+			parent = OneJOne.Base;
 		}
 		if(parent){
 			var parentPrototype = parent.prototype;
 			var T = function(){};
 			T.prototype = parentPrototype;
 			cls.prototype = new T();
-			cls.prototype.constructor = cls;
+//			cls.prototype.constructor = cls;
 			delete classBody.extend;
 		}
 	})
