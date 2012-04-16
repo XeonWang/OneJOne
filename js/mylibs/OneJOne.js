@@ -23,3 +23,8 @@ OneJOne.typeAlert = function(targetArray){
 	}
 	return true;
 }
+
+OneJOne.onReady = function(){
+	
+	
+}
