@@ -1,13 +1,22 @@
 /* Author: Xeon Wang
 
 */
-OneJOne.onReady(function(){
-	console.log(1);
+OneJOne.define('Person',{
+	name : 'person',
+	say : function(){
+		alert("Say...");
+	}
 });
 
-OneJOne.onReady(function(){
-	console.log(2);
+OneJOne.define('Man', {
+	extend : 'Person',
+	say : function(){
+		alert("Man say...");
+	}
 });
+
+//var tester = new Man({name : 'wzq'});
+//console.log(tester);
 
 
 
