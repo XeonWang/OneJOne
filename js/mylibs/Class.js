@@ -4,28 +4,50 @@
 	OneJOne.ClassManager = {
 		$classes : {},
 		
-		$processors : {},
+		$processors : [],
 		
 		getClass : function(className){
 			return this.$classes[className];
 		},
 		
-		registerProcessor : function(name, fn){
+		registerProcessor : function(name, fn, position){
 			if(!OneJOne.typeAlert([{
 				entry : name, type : 'string'
 			},{
 				entry : fn, type : 'function'
 			}])) return false;
 			
-			this.$processors[name] = fn;
+			var value = {name : name, fn : fn};
+			
+			switch(position){
+				case "first": 
+					$processors.unshift(value);
+					return;
+				case "last":
+					$processors.push(value);
+					return;
+				case undefined:
+					this.$processors.push(value)
+					return;
+				default:
+					var i = $processors.indexOf(position);
+					$processors.splice(i+1, 0, value);
+					return;
+			}
 		},
 		
 		define : function(className, classBody){
-			var newClass = function(){};
+			var newClass = function(){
+				return this.constructor.apply(this, arguments);
+			};
 			
-			var processorName;
-			for(processorName in OneJOne.ClassManager.$processors){
-				OneJOne.ClassManager.$processors[processorName](newClass, classBody);
+			newClass['constructor'] = function(){
+				return this;
+			}
+			
+			var processorIndex;
+			for(processorIndex=0 ;  processorIndex<OneJOne.ClassManager.$processors.length ; processorIndex++){
+				OneJOne.ClassManager.$processors[processorIndex].fn(newClass, classBody);
 			}
 			
 			var prototype = newClass.prototype;
@@ -36,6 +58,10 @@
 			}
 			global[className] = OneJOne.ClassManager.$classes[className] = newClass;
 			return newClass;
+		},
+		
+		getInstance : function(className, config){
+		
 		}
 	};
 	
