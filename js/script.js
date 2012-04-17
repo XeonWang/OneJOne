@@ -5,6 +5,12 @@ OneJOne.define('Person',{
 	name : 'person',
 	say : function(){
 		alert("Say...");
+	},
+	constructor : function(config){
+		var key;
+		for(key in config){
+			this[key] = config[key];
+		}
 	}
 });
 
@@ -15,9 +21,8 @@ OneJOne.define('Man', {
 	}
 });
 
-//var tester = new Man({name : 'wzq'});
-//console.log(tester);
-
+var tester = OneJOne.create('Man', {name : 'wzq'});
+console.log(tester);
 
 
 

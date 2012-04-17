@@ -1,5 +1,6 @@
 (function(){
 	var global = this;
+	var dependenceConfig = ['extend', 'require']; 
 	
 	OneJOne.ClassManager = {
 		$classes : {},
@@ -63,11 +64,23 @@
 		getInstance : function(className, config){
 			var cls = OneJOne.ClassManager.getClass(className);
 			return new cls(config);
-		}
+		},
+		
+		loadClass : ;
 	};
 	
 	OneJOne.define = OneJOne.ClassManager.define;
 	OneJOne.create = OneJOne.ClassManager.getInstance;
+	
+	OneJOne.ClassManager.registerProcessor('load', function(cls, classBody){
+		dependenceConfig.forEach(function(config){
+			config.forEach(function(className){
+				if(!OneJOne.ClassManager.getClass(className)){
+					OneJOne.ClassManager.loadClass(className);
+				}
+			});
+		});
+	});
 	
 	OneJOne.ClassManager.registerProcessor('extend', function(cls, classBody){
 		if(!OneJOne.typeAlert([{
