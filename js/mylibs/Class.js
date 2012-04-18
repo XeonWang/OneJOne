@@ -55,7 +55,12 @@
 			prototype.$className = className;
 			var field;
 			for(field in classBody){
-				prototype[field] = classBody[field];
+				var member = classBody[field];
+				if(typeof member == 'function'){
+					member.$owner = newClass;
+					member.$name = field;
+				}
+				prototype[field] = member;
 			}
 			global[className] = OneJOne.ClassManager.$classes[className] = newClass;
 			return newClass;
@@ -66,7 +71,27 @@
 			return new cls(config);
 		},
 		
-		loadClass : ;
+		loadClass : function(className){
+			var loaded = OneJOne.ClassManager.getClass(className);
+			if(loaded) return;
+			var classPath = this.getClassPath(className);
+			var head = OneJOne.html.getHead();
+			var script = document.createElement('script'),
+				onLoad = function(){console.log(className + ' loaded.')},
+				onError = function(){alert('load file error...');};
+			
+			script.setAttribute('type', 'text/javascript');
+			script.setAttribute('src', classPath);
+			script.onload = onLoad;
+			script.onerror = onError;
+			
+			head.appendChild(script);
+		},
+		
+		getClassPath : function(className){
+			className = className.toLowerCase().replace('.', '/');
+			return 'js/' + className + '.js';
+		}
 	};
 	
 	OneJOne.define = OneJOne.ClassManager.define;
@@ -74,11 +99,14 @@
 	
 	OneJOne.ClassManager.registerProcessor('load', function(cls, classBody){
 		dependenceConfig.forEach(function(config){
-			config.forEach(function(className){
-				if(!OneJOne.ClassManager.getClass(className)){
-					OneJOne.ClassManager.loadClass(className);
-				}
-			});
+			var configValue = classBody[config];
+			if(configValue){
+				configValue.forEach(function(className){
+					if(!OneJOne.ClassManager.getClass(className)){
+						OneJOne.ClassManager.loadClass(className);
+					}
+				});
+			}
 		});
 	});
 	
@@ -88,8 +116,8 @@
 		}])) return false;
 		
 		var parent = classBody && classBody.extend;
-		if(parent && typeof parent == 'string'){
-			parent = OneJOne.ClassManager.getClass(parent);
+		if(parent && parent.length>0 && typeof parent[0] == 'string'){
+			parent = OneJOne.ClassManager.getClass(parent[0]);
 		}else{
 			parent = OneJOne.Base;
 		}
@@ -98,6 +126,7 @@
 			var T = function(){};
 			T.prototype = parentPrototype;
 			cls.prototype = new T();
+			cls.prototype.superClass = cls.superClass = parentPrototype;
 //			cls.prototype.constructor = cls;
 			delete classBody.extend;
 		}
