@@ -17,7 +17,7 @@ OneJOne.typeAlert = function(targetArray){
 	var target;
 	for(target=0 ; target<ln ; target++){
 		if(!OneJOne.typeCheck(targetArray[target].entry, targetArray[target].type)){
-			alert("Type error!");
+			throw("Type error!");
 			return false;
 		}
 	}

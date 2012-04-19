@@ -62,8 +62,26 @@
 				}
 				prototype[field] = member;
 			}
-			global[className] = OneJOne.ClassManager.$classes[className] = newClass;
+			OneJOne.ClassManager.registeClass(className, newClass);
 			return newClass;
+		},
+		
+		registeClass : function(className, newClass){
+			if(className.indexOf('.')>-1){
+				var parents = className.split('.');
+				var ln = parents.length;
+				var root = global;
+				var i , item;
+				for(i=0 ; i<ln-1 ; i++){
+					item = parents[i];
+					var testObj = root[item];
+					if(typeof testObj != 'object'){
+						root[item] = {};
+					}
+					root = root[item];
+				}
+			}
+			global[className] = OneJOne.ClassManager.$classes[className] = newClass;
 		},
 		
 		getInstance : function(className, config){
@@ -127,8 +145,12 @@
 			T.prototype = parentPrototype;
 			cls.prototype = new T();
 			cls.prototype.superClass = cls.superClass = parentPrototype;
-//			cls.prototype.constructor = cls;
 			delete classBody.extend;
+		}else{
+			throw('Super class not found.');
+			cls.prototype.constructor = function(){
+				return this;
+			}
 		}
-	})
+	});
 })();

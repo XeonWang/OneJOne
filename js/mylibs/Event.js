@@ -9,7 +9,11 @@
 		});
 	}
 	
-	window.addEventListener('load', loadListener);
+	function onWindowLoad(){
+		loadListener();
+	}
+	
+	window.addEventListener('load', onWindowLoad);
 	
 	OneJOne.EventManager = {
 		registerLoadListener : function(listener){
