@@ -46,24 +46,32 @@
 				return this;
 			}
 			
-			var processorIndex;
-			for(processorIndex=0 ;  processorIndex<OneJOne.ClassManager.$processors.length ; processorIndex++){
-				OneJOne.ClassManager.$processors[processorIndex].fn(newClass, classBody);
-			}
-			
-			var prototype = newClass.prototype;
-			prototype.$className = className;
-			var field;
-			for(field in classBody){
-				var member = classBody[field];
-				if(typeof member == 'function'){
-					member.$owner = newClass;
-					member.$name = field;
+			var processorIndex = 0,
+				processorLn = OneJOne.ClassManager.$processors.length;
+			function excuProcessor(){
+				if(processorLn>0 && processorIndex<processorLn){
+					OneJOne.ClassManager.$processors[processorIndex++].fn(newClass, classBody, excuProcessor);
+				}else{
+					buildClass();
 				}
-				prototype[field] = member;
 			}
-			OneJOne.ClassManager.registeClass(className, newClass);
-			return newClass;
+			excuProcessor();
+			
+			function buildClass(){
+				var prototype = newClass.prototype;
+				prototype.$className = className;
+				var field;
+				for(field in classBody){
+					var member = classBody[field];
+					if(typeof member == 'function'){
+						member.$owner = newClass;
+						member.$name = field;
+					}
+					prototype[field] = member;
+				}
+				OneJOne.ClassManager.registeClass(className, newClass);
+				return newClass;
+			}
 		},
 		
 		registeClass : function(className, newClass){
@@ -80,8 +88,11 @@
 					}
 					root = root[item];
 				}
+				root[parents[i]] = newClass;
+			}else{
+				global[className] = newClass;
 			}
-			global[className] = OneJOne.ClassManager.$classes[className] = newClass;
+			OneJOne.ClassManager.$classes[className] = newClass;
 		},
 		
 		getInstance : function(className, config){
@@ -89,13 +100,16 @@
 			return new cls(config);
 		},
 		
-		loadClass : function(className){
+		loadClass : function(className, afterLoad){
 			var loaded = OneJOne.ClassManager.getClass(className);
 			if(loaded) return;
 			var classPath = this.getClassPath(className);
 			var head = OneJOne.html.getHead();
 			var script = document.createElement('script'),
-				onLoad = function(){console.log(className + ' loaded.')},
+				onLoad = function(){
+					console.log(className + ' loaded.');
+					afterLoad();
+				},
 				onError = function(){alert('load file error...');};
 			
 			script.setAttribute('type', 'text/javascript');
@@ -115,20 +129,33 @@
 	OneJOne.define = OneJOne.ClassManager.define;
 	OneJOne.create = OneJOne.ClassManager.getInstance;
 	
-	OneJOne.ClassManager.registerProcessor('load', function(cls, classBody){
+	OneJOne.ClassManager.registerProcessor('load', function(cls, classBody, callback){
+		var allDepClass = [];
 		dependenceConfig.forEach(function(config){
 			var configValue = classBody[config];
 			if(configValue){
-				configValue.forEach(function(className){
-					if(!OneJOne.ClassManager.getClass(className)){
-						OneJOne.ClassManager.loadClass(className);
-					}
-				});
+				allDepClass = allDepClass.concat(configValue);
 			}
 		});
+		var classLn = allDepClass.length;
+		if(classLn > 0){
+			var classIndex = 0;
+			function loadClassByIndex(afterLoad){
+				if(classIndex < classLn){
+					OneJOne.ClassManager.loadClass(allDepClass[classIndex++], afterLoad);
+				}else{
+					callback();
+				}
+			}
+			if(classIndex < classLn && !OneJOne.ClassManager.getClass(allDepClass[classIndex])){
+				loadClassByIndex(loadClassByIndex);
+			}
+		}else{
+			callback();
+		}
 	});
 	
-	OneJOne.ClassManager.registerProcessor('extend', function(cls, classBody){
+	OneJOne.ClassManager.registerProcessor('extend', function(cls, classBody, callback){
 		if(!OneJOne.typeAlert([{
 			entry : cls, type : 'function'
 		}])) return false;
@@ -152,5 +179,6 @@
 				return this;
 			}
 		}
+		callback();
 	});
 })();
