@@ -1,4 +1,4 @@
-OneJOne.define('entry.Person',{
+OneJOne.define('Person',{
 	name : 'person',
 	say : function(name){
 		alert("Say..." + name);
